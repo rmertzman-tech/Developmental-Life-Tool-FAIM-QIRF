@@ -2,46 +2,545 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
-  <title>FAIM-QIRF Demo • Ethics & Epistemic Justice</title>
-  <meta name="color-scheme" content="light only" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-    rel="stylesheet"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FAIM‑QIRF — Developmental & Future‑Pull Planner (Single‑File)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html, body { height: 100%; }
-    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    .chip { @apply text-xs px-2 py-1 rounded-full bg-gray-100; }
+    .shadow-soft{box-shadow:0 6px 24px rgba(0,0,0,.08)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .kbd{border:1px solid #e5e7eb;border-bottom-width:2px;border-radius:.375rem;padding:.1rem .35rem;background:#fafafa;font-size:.85em}
+    .tip{background:rgba(99,102,241,.08);border-left:3px solid rgba(99,102,241,1)}
+    .bar{height:.5rem;border-radius:.25rem}
   </style>
 </head>
-<body class="bg-gray-50">
-  <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="#/home" class="font-bold text-lg">FAIM-QIRF • Demo</a>
-      <nav class="flex gap-3 text-sm">
-        <a class="hover:underline" href="#/playground">Playground</a>
-        <a class="hover:underline" href="#/philosophers">Philosophers</a>
-        <a class="hover:underline" href="#/labs">Injustice Labs</a>
-        <a class="hover:underline" href="#/repair">Repair</a>
-        <a class="hover:underline" href="#/about">About</a>
-      </nav>
+<body class="bg-slate-50 text-slate-800">
+  <header class="bg-white shadow-soft">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">FAIM‑QIRF — Developmental & Future‑Pull Planner</h1>
+      <p class="mt-2 text-slate-600">This app is designed to help anyone examine their life and look to the future: (1) map their <span class="font-semibold">developmental profile</span> (needs×ABCD×SPTS/PRF<sub>t</sub>), (2) plan an <span class="font-semibold">aspirational Future‑Pull</span> path (capacity→capability→constructor→meta‑constructor), and (3) compute a readiness <span class="mono">Q</span> using stage‑tuned <span class="font-semibold">ATCF</span> weights. Stateless. Export/Import JSON to save.</p>
+      <div class="mt-4 grid md:grid-cols-2 gap-3">
+        <div class="p-4 rounded-lg tip">
+          <h2 class="font-bold">Perspective reminder</h2>
+          <p class="text-sm mt-1">You are modeling <em>one person’s</em> standpoint (their PRF at time t — OS1/PRS<sub>t</sub>). Readiness <span class="mono">Q</span> estimates whether <em>your procedures & capabilities</em> are coherent <em>enough</em> to move forward today. It does not force agreement; it enables constructive next steps at OS2.</p>
+        </div>
+        <div class="p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+          <h2 class="font-bold">What you’ll do</h2>
+          <ul class="text-sm mt-1 list-disc pl-5 space-y-1">
+            <li>Complete a <b>Developmental Profile</b> (stage, needs, ABCD, SPTS, IK, BROA<sup>+</sup>, AH).</li>
+            <li>Design one or more <b>Future‑Pull paths</b> (goal cards with milestones, supports, barriers, audit cycle).</li>
+            <li>Tune <b>ATCF</b> sliders and stage weights to compute readiness <span class="mono">Q</span>.</li>
+            <li>Export your plan or load a demo scenario.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2 items-center">
+        <button id="btnPrimer" class="px-3 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">Primer</button>
+        <button id="btnHow" class="px-3 py-2 rounded-md bg-slate-200 text-slate-800 text-sm font-semibold hover:bg-slate-300">How to use</button>
+        <div class="ml-auto flex gap-2 items-center">
+          <button id="btnExport" class="px-3 py-2 rounded-md bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200">Export JSON</button>
+          <label class="px-3 py-2 rounded-md bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200 cursor-pointer">Import JSON <input id="fileImport" type="file" accept="application/json" class="hidden" /></label>
+          <label class="text-xs flex items-center gap-2"><input type="checkbox" id="chkLog"> Show Review Log</label>
+        </div>
+      </div>
+
+      <!-- Collapsibles -->
+      <section id="primer" class="hidden mt-4 p-4 bg-white border rounded-lg text-sm">
+        <h3 class="font-bold">Primer: Three layers + Future‑Pull</h3>
+        <ul class="list-disc pl-5 mt-2 space-y-1">
+          <li><b>SPTS (Standpoint):</b> structural role & default gates; slow‑changing; inside PRF.</li>
+          <li><b>Perspective:</b> momentary OS1 lens on this task; fast‑changing.</li>
+          <li><b>PRF(t):</b> full internal model (IK, BROA<sup>+</sup>, AH, lexicon, goals…); generates OS1 and constrains OS2.</li>
+          <li><b>Future‑Pull (Personal Attractor):</b> a goal‑anchored path that draws you forward; operationalized as a capability ladder (capacity→capability→constructor→meta).</li>
+        </ul>
+        <p class="mt-2">Readiness <span class="mono">Q</span> comes from <b>ATCF</b> (Identity‑Kernel, Recursive capability, Domain integration, Temporal consistency) with weights tuned to your stage.</p>
+      </section>
+
+      <section id="how" class="hidden mt-4 p-4 bg-white border rounded-lg text-sm">
+        <h3 class="font-bold">How to use</h3>
+        <ol class="list-decimal pl-5 mt-1 space-y-1">
+          <li>Fill your <b>Developmental Profile</b> (or load a demo).</li>
+          <li>Create 1–3 <b>Future‑Pull</b> path cards (title, why/awe, target level, milestones, supports, barriers).</li>
+          <li>Set <b>ATCF</b> sliders; click <b>Apply Stage Weights</b>; check <span class="mono">Q</span> and suggestions.</li>
+          <li>Optionally append entries to the <b>Review Log</b> and set a review date.</li>
+          <li>Export JSON to save/share.</li>
+        </ol>
+      </section>
     </div>
   </header>
 
-  <main id="app" class="max-w-7xl mx-auto px-4 py-6"></main>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Demos -->
+    <section class="bg-white border rounded-lg p-6 shadow-soft">
+      <div class="flex items-center gap-2">
+        <h2 class="text-xl font-bold">Starter Demos</h2>
+        <span id="demoBadge" class="ml-2 text-xs px-2 py-1 rounded bg-slate-100 text-slate-700">None loaded</span>
+        <div class="ml-auto flex gap-2">
+          <button class="demo px-3 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700" data-k="teen">Adolescent — Fair Equivalence Advocate</button>
+          <button class="demo px-3 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700" data-k="ya">Young Adult — Dual‑Track Leader</button>
+          <button class="demo px-3 py-2 rounded-md bg-slate-800 text-white text-sm font-semibold hover:bg-black" data-k="adult">Adult — Consent Policy Upgrader</button>
+          <button id="btnReset" class="px-3 py-2 rounded-md bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200">Reset</button>
+        </div>
+      </div>
+      <p class="text-sm text-slate-600 mt-2">Each demo pre‑fills a profile, one Future‑Pull path, and ATCF setup. Tweak and observe changes to readiness <span class="mono">Q</span>.</p>
+    </section>
 
-  <footer class="border-t mt-10">
-    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-gray-500">
-      Demo is stateless. Use Export/Import to share a configuration. No tracking, no cookies.
+    <!-- Developmental Profile -->
+    <section class="bg-white border rounded-lg p-6 shadow-soft" id="profile">
+      <h2 class="text-xl font-bold">1) Developmental Profile</h2>
+      <div class="grid md:grid-cols-3 gap-6 mt-4 text-sm">
+        <!-- Stage & Needs -->
+        <div>
+          <label class="block font-semibold">Stage</label>
+          <select id="stage" class="mt-1 w-full border rounded-md p-2">
+            <option>Child</option>
+            <option>Adolescent</option>
+            <option selected>Young Adult</option>
+            <option>Adult</option>
+            <option>Mature</option>
+            <option>Elderly</option>
+          </select>
+          <div class="mt-3">
+            <div class="flex items-center justify-between"><span class="font-semibold">Needs (0–3)</span><button id="btnNeedsReset" class="text-xs px-2 py-1 rounded bg-slate-100 hover:bg-slate-200">Reset</button></div>
+            <div class="mt-2 space-y-2">
+              <div><label>Safety</label><input id="n_safety" type="range" min="0" max="3" value="2" class="w-full"/></div>
+              <div><label>Belonging</label><input id="n_belong" type="range" min="0" max="3" value="2" class="w-full"/></div>
+              <div><label>Esteem/Autonomy</label><input id="n_esteem" type="range" min="0" max="3" value="2" class="w-full"/></div>
+              <div><label>Growth</label><input id="n_growth" type="range" min="0" max="3" value="2" class="w-full"/></div>
+              <div><label>Transcendence</label><input id="n_trans" type="range" min="0" max="3" value="1" class="w-full"/></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABCD -->
+        <div>
+          <div class="flex items-center justify-between"><span class="font-semibold">ABCD (0–3)</span><button id="btnABCDReset" class="text-xs px-2 py-1 rounded bg-slate-100 hover:bg-slate-200">Reset</button></div>
+          <div class="mt-2 space-y-2">
+            <div><label>A — Agency</label><input id="a_A" type="range" min="0" max="3" value="2" class="w-full"/></div>
+            <div><label>B — Beauty/Awe</label><input id="a_B" type="range" min="0" max="3" value="2" class="w-full"/></div>
+            <div><label>C — Context</label><input id="a_C" type="range" min="0" max="3" value="2" class="w-full"/></div>
+            <div><label>D — Dynamics</label><input id="a_D" type="range" min="0" max="3" value="2" class="w-full"/></div>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">These shape what becomes visible in OS1 and what feels legitimate in OS2.</p>
+        </div>
+
+        <!-- SPTS / IK / BROA / AH -->
+        <div>
+          <label class="block font-semibold">SPTS (roles/obligations)</label>
+          <input id="s_roles" class="mt-1 w-full border rounded-md p-2" placeholder="e.g., student, worker, caregiver"/>
+          <input id="s_obl" class="mt-2 w-full border rounded-md p-2" placeholder="obligations (comma‑separated)"/>
+          <label class="block font-semibold mt-3">Identity Kernel (IK)</label>
+          <input id="ik_tags" class="mt-1 w-full border rounded-md p-2" placeholder="3 non‑negotiables (comma‑separated)"/>
+          <label class="block font-semibold mt-3">BROA<sup>+</sup> filters</label>
+          <input id="b_beliefs" class="mt-1 w-full border rounded-md p-2" placeholder="beliefs (comma‑separated)"/>
+          <input id="b_rules" class="mt-2 w-full border rounded-md p-2" placeholder="rules (comma‑separated)"/>
+          <input id="b_ont" class="mt-2 w-full border rounded-md p-2" placeholder="ontology (comma‑separated)"/>
+          <input id="b_auth" class="mt-2 w-full border rounded-md p-2" placeholder="authenticity note (why these matter)"/>
+          <label class="block font-semibold mt-3">Assembly History (AH)</label>
+          <input id="ah1" class="mt-1 w-full border rounded-md p-2" placeholder="formative experience #1"/>
+          <input id="ah2" class="mt-2 w-full border rounded-md p-2" placeholder="formative experience #2"/>
+        </div>
+      </div>
+    </section>
+
+    <!-- Capability Ladder Planner -->
+    <section class="bg-white border rounded-lg p-6 shadow-soft">
+      <h2 class="text-xl font-bold">2) Capability Ladder Planner</h2>
+      <div class="grid md:grid-cols-3 gap-6 mt-4 text-sm">
+        <div>
+          <label class="block font-semibold">Capacity to upgrade</label>
+          <input id="cap_to_upgrade" class="mt-1 w-full border rounded-md p-2" placeholder="e.g., perspective‑taking, time mgmt"/>
+          <label class="block font-semibold mt-3">Capability goal</label>
+          <input id="cap_goal" class="mt-1 w-full border rounded-md p-2" placeholder="e.g., build Toulmin warrant integrating lived evidence"/>
+        </div>
+        <div>
+          <label class="block font-semibold">Constructor to co‑own</label>
+          <select id="constructor" class="mt-1 w-full border rounded-md p-2">
+            <option value="dualTrack">Dual‑Track Grading SOP</option>
+            <option value="consentSOP">Consent & Privacy SOP</option>
+            <option value="reviewerDiversity">Reviewer Diversity SOP</option>
+            <option value="custom">Custom…</option>
+          </select>
+          <label class="block font-semibold mt-3">Audit cycle (weeks)</label>
+          <input id="auditWeeks" type="number" min="1" value="6" class="mt-1 w-full border rounded-md p-2"/>
+          <p class="text-xs text-slate-500 mt-1">Meta‑constructor: schedule reviews so the procedure keeps improving.</p>
+        </div>
+        <div>
+          <h3 class="font-semibold">Plan summary</h3>
+          <div id="planSummary" class="mt-2 text-xs text-slate-600 bg-slate-50 border rounded p-3">Fill the fields to see your plan.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ATCF & Readiness -->
+    <section class="bg-white border rounded-lg p-6 shadow-soft">
+      <div class="flex items-center gap-2">
+        <h2 class="text-xl font-bold">3) ATCF & Readiness</h2>
+        <button id="btnApplyStage" class="ml-auto px-3 py-2 rounded-md bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200">Apply Stage Weights</button>
+        <button id="btnResetATCF" class="px-3 py-2 rounded-md bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200">Reset sliders</button>
+      </div>
+      <p class="text-sm text-slate-600 mt-1">Tune components (0–100). Weights depend on your stage. Teaching threshold: <b>Q ≥ 0.60</b>.</p>
+      <div class="grid md:grid-cols-2 gap-4 mt-3 text-sm">
+        <div>
+          <label class="block">IK — Identity‑Kernel coherence — <span id="ik_out" class="mono">70%</span></label>
+          <input id="ik" type="range" min="0" max="100" value="70" class="w-full" />
+        </div>
+        <div>
+          <label class="block">RC — Recursive capability — <span id="rc_out" class="mono">70%</span></label>
+          <input id="rc" type="range" min="0" max="100" value="70" class="w-full" />
+        </div>
+        <div>
+          <label class="block">DI — Domain integration — <span id="di_out" class="mono">70%</span></label>
+          <input id="di" type="range" min="0" max="100" value="70" class="w-full" />
+        </div>
+        <div>
+          <label class="block">TC — Temporal consistency — <span id="tc_out" class="mono">70%</span></label>
+          <input id="tc" type="range" min="0" max="100" value="70" class="w-full" />
+        </div>
+      </div>
+      <div class="mt-3 text-sm">
+        <p><span class="mono">Weights:</span> <span id="w_out" class="mono">IK .30, RC .30, DI .20, TC .20</span> → <span class="mono">Q =</span> <span id="qval" class="font-bold">0.70</span> <span id="qbadge" class="ml-2 text-xs px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Ready (≥ 0.60)</span></p>
+        <div class="mt-2 bg-slate-200 rounded bar"><div id="qbar" class="bar bg-emerald-500" style="width:70%"></div></div>
+        <p id="qnote" class="mt-2 text-xs text-slate-500">Raise components under 60% or adjust procedures; then re‑evaluate.</p>
+      </div>
+    </section>
+
+    <!-- Future‑Pull Planner -->
+    <section class="bg-white border rounded-lg p-6 shadow-soft">
+      <div class="flex items-center gap-2">
+        <h2 class="text-xl font-bold">4) Future‑Pull Planner</h2>
+        <button id="btnAddPath" class="ml-auto px-3 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">Add Path</button>
+      </div>
+      <p class="text-sm text-slate-600 mt-1">Design 1–3 attractor paths. Status uses your current <span class="mono">Q</span> and simple gates (support/time/safety).</p>
+      <div id="paths" class="mt-3 grid md:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- Review Log (optional) -->
+    <section id="logSection" class="bg-white border rounded-lg p-6 shadow-soft hidden">
+      <h2 class="text-xl font-bold">Review Log</h2>
+      <p class="text-sm text-slate-600">Append‑only: Truth → Recognition → Remedy → Review date. Use it as a meta‑constructor loop.</p>
+      <div class="grid md:grid-cols-4 gap-3 text-sm mt-2">
+        <input id="trc_truth" class="border rounded-md p-2" placeholder="Truth (what happened, in their terms)" />
+        <input id="trc_rec" class="border rounded-md p-2" placeholder="Recognition (what we understood)" />
+        <input id="trc_rem" class="border rounded-md p-2" placeholder="Remedy (owner/resources/date)" />
+        <input id="trc_rev" class="border rounded-md p-2" placeholder="Review date (YYYY‑MM‑DD)" />
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="btnTRC" class="px-3 py-2 rounded-md bg-slate-800 text-white text-sm font-semibold hover:bg-black">Append Entry</button>
+        <button id="btnExportLog" class="px-3 py-2 rounded-md bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200">Export Log JSON</button>
+      </div>
+      <div class="mt-4">
+        <h3 class="font-semibold">Log</h3>
+        <div id="log" class="mt-2 space-y-2 text-sm"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-xs text-slate-500">
+    <div class="flex flex-wrap items-center gap-2">
+      <span>© FAIM‑QIRF demo — stateless.</span>
+      <span class="mx-1">•</span>
+      <span>Tip: press <span class="kbd">⌘</span><span class="kbd">S</span> on exported JSON in a text editor to save.</span>
     </div>
   </footer>
 
-  <script type="module" src="./app/main.js"></script>
+  <script>
+    // ---------- helpers ----------
+    const byId = id => document.getElementById(id);
+    const qsa = sel => Array.from(document.querySelectorAll(sel));
+    const todayISO = () => new Date().toISOString().slice(0,10);
+    const download = (filename, text) => { const blob=new Blob([text],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url); };
+
+    function toggle(id){ const el=byId(id); if(!el) return; el.classList.toggle('hidden'); }
+    byId('btnPrimer').onclick = ()=> toggle('primer');
+    byId('btnHow').onclick = ()=> toggle('how');
+
+    // ---------- state ----------
+    const stageWeights = {
+      'Child':      {ik:.40, rc:.20, di:.20, tc:.20},
+      'Adolescent': {ik:.35, rc:.25, di:.20, tc:.20},
+      'Young Adult':{ik:.30, rc:.30, di:.20, tc:.20},
+      'Adult':      {ik:.25, rc:.30, di:.25, tc:.20},
+      'Mature':     {ik:.25, rc:.25, di:.25, tc:.25},
+      'Elderly':    {ik:.25, rc:.20, di:.20, tc:.35}
+    };
+
+    const state = {
+      profile: {
+        stage: 'Young Adult',
+        needs: {safety:2, belonging:2, esteem:2, growth:2, transcend:1},
+        ABCD: {A:2, B:2, C:2, D:2},
+        SPTS: {roles:[], obligations:[]},
+        IK: [], BROA: {beliefs:[], rules:[], ontology:[], authenticity:''},
+        AH: ['', '']
+      },
+      plan: { capacityToUpgrade:'', capabilityGoal:'', constructor:'dualTrack', auditWeeks:6 },
+      atcf: { ik:70, rc:70, di:70, tc:70 },
+      weights: { ...stageWeights['Young Adult'] },
+      q: .7,
+      paths: [],
+      changeLog: []
+    };
+
+    // ---------- wiring: profile inputs ----------
+    byId('stage').addEventListener('change', e=>{ state.profile.stage=e.target.value; applyStageWeights(); });
+    const needsIds=['n_safety','n_belong','n_esteem','n_growth','n_trans'];
+    needsIds.forEach(id=> byId(id).addEventListener('input', ()=>{
+      state.profile.needs={
+        safety:+byId('n_safety').value,
+        belonging:+byId('n_belong').value,
+        esteem:+byId('n_esteem').value,
+        growth:+byId('n_growth').value,
+        transcend:+byId('n_trans').value
+      };
+    }));
+    byId('btnNeedsReset').onclick = ()=>{ ['n_safety','n_belong','n_esteem','n_growth','n_trans'].forEach(id=> byId(id).value=2); byId('n_trans').value=1; state.profile.needs={safety:2,belonging:2,esteem:2,growth:2,transcend:1}; };
+
+    const abcdIds=['a_A','a_B','a_C','a_D'];
+    abcdIds.forEach(id=> byId(id).addEventListener('input', ()=>{
+      state.profile.ABCD={ A:+byId('a_A').value, B:+byId('a_B').value, C:+byId('a_C').value, D:+byId('a_D').value };
+    }));
+    byId('btnABCDReset').onclick = ()=>{ ['a_A','a_B','a_C','a_D'].forEach(id=> byId(id).value=2); state.profile.ABCD={A:2,B:2,C:2,D:2}; };
+
+    byId('s_roles').addEventListener('input', e=> state.profile.SPTS.roles = e.target.value.split(',').map(s=>s.trim()).filter(Boolean));
+    byId('s_obl').addEventListener('input', e=> state.profile.SPTS.obligations = e.target.value.split(',').map(s=>s.trim()).filter(Boolean));
+    byId('ik_tags').addEventListener('input', e=> state.profile.IK = e.target.value.split(',').map(s=>s.trim()).filter(Boolean));
+    byId('b_beliefs').addEventListener('input', e=> state.profile.BROA.beliefs = e.target.value.split(',').map(s=>s.trim()).filter(Boolean));
+    byId('b_rules').addEventListener('input', e=> state.profile.BROA.rules = e.target.value.split(',').map(s=>s.trim()).filter(Boolean));
+    byId('b_ont').addEventListener('input', e=> state.profile.BROA.ontology = e.target.value.split(',').map(s=>s.trim()).filter(Boolean));
+    byId('b_auth').addEventListener('input', e=> state.profile.BROA.authenticity = e.target.value);
+    byId('ah1').addEventListener('input', e=> state.profile.AH[0]=e.target.value);
+    byId('ah2').addEventListener('input', e=> state.profile.AH[1]=e.target.value);
+
+    // ---------- wiring: plan inputs ----------
+    byId('cap_to_upgrade').addEventListener('input', e=>{ state.plan.capacityToUpgrade=e.target.value; renderPlanSummary(); });
+    byId('cap_goal').addEventListener('input', e=>{ state.plan.capabilityGoal=e.target.value; renderPlanSummary(); });
+    byId('constructor').addEventListener('change', e=>{ state.plan.constructor=e.target.value; renderPlanSummary(); });
+    byId('auditWeeks').addEventListener('input', e=>{ state.plan.auditWeeks=Math.max(1,+e.target.value||6); renderPlanSummary(); });
+
+    function renderPlanSummary(){
+      const p=state.plan; const stage=state.profile.stage; const nextRev = computeNextReview(p.auditWeeks);
+      byId('planSummary').innerHTML = `Stage: <b>${stage}</b><br/>Upgrade: <b>${escapeHtml(p.capacityToUpgrade||'—')}</b> → Capability: <b>${escapeHtml(p.capabilityGoal||'—')}</b><br/>Constructor: <b>${labelConstructor(p.constructor)}</b> • Review in <b>${p.auditWeeks}</b> wks → <b>${nextRev}</b>`;
+    }
+    function labelConstructor(key){ return ({dualTrack:'Dual‑Track Grading SOP', consentSOP:'Consent & Privacy SOP', reviewerDiversity:'Reviewer Diversity SOP', custom:'Custom'})[key]||key; }
+
+    // ---------- ATCF ----------
+    ;['ik','rc','di','tc'].forEach(id=> byId(id).addEventListener('input', ()=>{ state.atcf[id]=+byId(id).value; updateQ(); }));
+    byId('btnResetATCF').onclick = ()=>{ state.atcf={ik:70,rc:70,di:70,tc:70}; ['ik','rc','di','tc'].forEach(id=> byId(id).value=70); updateQ(); };
+
+    function applyStageWeights(){ state.weights={...stageWeights[state.profile.stage]}; updateQ(); }
+    byId('btnApplyStage').onclick = applyStageWeights;
+
+    function updateQ(){
+      const {ik,rc,di,tc}=state.atcf; ['ik','rc','di','tc'].forEach(k=> byId(k+'_out').textContent=state.atcf[k]+'%');
+      const w=state.weights; byId('w_out').textContent=`IK ${w.ik.toFixed(2)} , RC ${w.rc.toFixed(2)} , DI ${w.di.toFixed(2)} , TC ${w.tc.toFixed(2)}`.replace(/0\./g,'.');
+      const Q=(w.ik*ik + w.rc*rc + w.di*di + w.tc*tc)/100; state.q=Math.round(Q*100)/100;
+      byId('qval').textContent=state.q.toFixed(2);
+      const qOK=state.q>=0.60; const bar=byId('qbar'); bar.style.width=(state.q*100)+'%'; bar.className='bar '+(qOK?'bg-emerald-500':'bg-rose-500');
+      const badge=byId('qbadge'); badge.textContent=qOK?'Ready (≥ 0.60)':'Below threshold'; badge.className='ml-2 text-xs px-2 py-0.5 rounded '+(qOK?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-rose-50 text-rose-700 border border-rose-200');
+      byId('qnote').textContent=qOK? 'If supports & time are in place, proceed; otherwise shore up weak components and set a review date.' : 'Raise components < 60% (IK/RC/DI/TC) or improve procedures; then re‑evaluate.';
+      renderPaths();
+    }
+
+    // ---------- Future‑Pull paths ----------
+    byId('btnAddPath').onclick = ()=> addPath();
+
+    function pathTemplate(){
+      return { id:cryptoId(), title:'', why:'', targetLevel:'capability', gates:{support:false,time:false,safety:true}, milestones:[], barriers:[], supports:[], auditWeeks:state.plan.auditWeeks||6, createdAt:todayISO() };
+    }
+    function addPath(p){ state.paths.push(p||pathTemplate()); renderPaths(); }
+    function removePath(id){ state.paths = state.paths.filter(x=>x.id!==id); renderPaths(); }
+
+    function renderPaths(){
+      const wrap = byId('paths'); if(!wrap) return; if(state.paths.length===0){ wrap.innerHTML='<div class="col-span-3 text-sm text-slate-500">No paths yet. Click <b>Add Path</b> to create a Future‑Pull card.</div>'; return; }
+      wrap.innerHTML = state.paths.map(p=> pathCardHTML(p)).join('');
+      // attach handlers
+      state.paths.forEach(p=> attachPathHandlers(p.id));
+    }
+
+    function pathCardHTML(p){
+      const qOK = state.q>=0.60; const ready = qOK && p.gates.support && p.gates.time && p.gates.safety;
+      const badge = ready? 'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-amber-50 text-amber-700 border border-amber-200';
+      return `
+      <div class="border rounded-lg p-4 bg-slate-50" id="path_${p.id}">
+        <div class="flex items-center gap-2">
+          <input data-k="title" class="flex-1 border rounded-md p-2 font-semibold" placeholder="Path title (e.g., Fair‑Process Advocate)" value="${escapeHtml(p.title)}" />
+          <span class="text-xs px-2 py-0.5 rounded ${badge}">${ready? 'Ready to pursue' : 'Needs work'}</span>
+        </div>
+        <textarea data-k="why" rows="2" class="mt-2 w-full border rounded-md p-2 text-sm" placeholder="Why/Awe spark (what draws me forward)">${escapeHtml(p.why)}</textarea>
+        <div class="grid grid-cols-2 gap-3 mt-2 text-sm">
+          <div>
+            <label class="block font-semibold">Target level</label>
+            <select data-k="targetLevel" class="mt-1 w-full border rounded-md p-2">
+              <option ${p.targetLevel==='capacity'?'selected':''} value="capacity">Capacity</option>
+              <option ${p.targetLevel==='capability'?'selected':''} value="capability">Capability</option>
+              <option ${p.targetLevel==='constructor'?'selected':''} value="constructor">Constructor</option>
+              <option ${p.targetLevel==='meta'?'selected':''} value="meta">Meta‑constructor</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold">Audit cycle (weeks)</label>
+            <input data-k="auditWeeks" type="number" min="1" value="${p.auditWeeks}" class="mt-1 w-full border rounded-md p-2" />
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 mt-3 text-sm">
+          <div>
+            <label class="block font-semibold">Milestones</label>
+            <div class="space-y-1" id="ms_${p.id}">
+              ${p.milestones.map((m,i)=> `<div class='flex gap-1 items-center'><input data-k="ms_desc_${i}" class='flex-1 border rounded p-1' value='${escapeHtml(m.desc||'')}'/><input data-k="ms_when_${i}" type='date' class='border rounded p-1' value='${m.when||''}'/><button data-act="del_ms_${i}" class='text-xs px-2 py-1 rounded bg-slate-100 hover:bg-slate-200'>–</button></div>`).join('')}
+            </div>
+            <button data-act="add_ms" class="mt-2 text-xs px-2 py-1 rounded bg-slate-100 hover:bg-slate-200">+ Milestone</button>
+          </div>
+          <div>
+            <label class="block font-semibold">Supports (comma‑sep)</label>
+            <input data-k="supports" class="mt-1 w-full border rounded-md p-2" placeholder="mentors, time block, tools" value="${escapeHtml(p.supports.join(', '))}"/>
+            <label class="block font-semibold mt-3">Barriers (comma‑sep)</label>
+            <input data-k="barriers" class="mt-1 w-full border rounded-md p-2" placeholder="time, skills, access" value="${escapeHtml(p.barriers.join(', '))}"/>
+          </div>
+          <div>
+            <label class="block font-semibold">Gates</label>
+            <label class="mt-1 flex items-center gap-2"><input data-k="g_support" type="checkbox" ${p.gates.support?'checked':''}/> Support network present</label>
+            <label class="mt-1 flex items-center gap-2"><input data-k="g_time" type="checkbox" ${p.gates.time?'checked':''}/> Time budget available</label>
+            <label class="mt-1 flex items-center gap-2"><input data-k="g_safety" type="checkbox" ${p.gates.safety?'checked':''}/> Safety risk mitigated</label>
+            <div class="mt-3 flex gap-2">
+              <button data-act="suggest" class="px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">Suggestions</button>
+              <button data-act="log" class="px-3 py-2 rounded-md bg-slate-800 text-white text-xs font-semibold hover:bg-black">Append to Log</button>
+              <button data-act="del" class="ml-auto px-3 py-2 rounded-md bg-rose-50 text-rose-700 text-xs border border-rose-200">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function attachPathHandlers(id){
+      const card = byId('path_'+id); if(!card) return; const p = state.paths.find(x=>x.id===id); if(!p) return;
+      card.querySelector('[data-k="title"]').addEventListener('input', e=> p.title=e.target.value);
+      card.querySelector('[data-k="why"]').addEventListener('input', e=> p.why=e.target.value);
+      card.querySelector('[data-k="targetLevel"]').addEventListener('change', e=> p.targetLevel=e.target.value);
+      card.querySelector('[data-k="auditWeeks"]').addEventListener('input', e=> p.auditWeeks=Math.max(1,+e.target.value||6));
+      card.querySelector('[data-k="supports"]').addEventListener('input', e=> p.supports = e.target.value.split(',').map(s=>s.trim()).filter(Boolean));
+      card.querySelector('[data-k="barriers"]').addEventListener('input', e=> p.barriers = e.target.value.split(',').map(s=>s.trim()).filter(Boolean));
+      card.querySelector('[data-k="g_support"]').addEventListener('change', e=> p.gates.support=e.target.checked);
+      card.querySelector('[data-k="g_time"]').addEventListener('change', e=> p.gates.time=e.target.checked);
+      card.querySelector('[data-k="g_safety"]').addEventListener('change', e=> p.gates.safety=e.target.checked);
+      // milestones
+      card.querySelectorAll('[data-act^="del_ms_"]').forEach(btn=> btn.addEventListener('click', ()=>{
+        const i=+btn.getAttribute('data-act').split('_').pop(); p.milestones.splice(i,1); renderPaths();
+      }));
+      const addBtn = card.querySelector('[data-act="add_ms"]'); if(addBtn) addBtn.addEventListener('click', ()=>{ p.milestones.push({desc:'', when:''}); renderPaths(); });
+      // suggestions
+      card.querySelector('[data-act="suggest"]').addEventListener('click', ()=>{
+        const msg = suggestionText(p);
+        alert(msg);
+      });
+      // log
+      card.querySelector('[data-act="log"]').addEventListener('click', ()=>{
+        const truth = `${p.title||'Path'} status is ${(state.q>=0.60 && p.gates.support && p.gates.time && p.gates.safety)?'READY':'NOT READY'} (Q=${state.q.toFixed(2)}).`;
+        const recognition = suggestionText(p, true);
+        const remedy = `Owner: me; Next milestone: ${(p.milestones[0]&&p.milestones[0].when)||computeNextReview(p.auditWeeks)}; Resources: ${p.supports.slice(0,2).join(', ')||'—'}`;
+        const reviewDate = computeNextReview(p.auditWeeks);
+        state.changeLog.push({id:cryptoId(), truth, recognition, remedy, reviewDate, createdAt: new Date().toISOString()});
+        if(!byId('logSection').classList.contains('hidden')) renderLog();
+        alert('Appended to Review Log with review date '+reviewDate);
+      });
+      // delete
+      card.querySelector('[data-act="del"]').addEventListener('click', ()=> removePath(id));
+      // bind milestone inputs after creation
+      p.milestones.forEach((m,i)=>{
+        const d=card.querySelector(`[data-k="ms_desc_${i}"]`); const w=card.querySelector(`[data-k="ms_when_${i}"]`);
+        if(d) d.addEventListener('input', e=> m.desc=e.target.value);
+        if(w) w.addEventListener('input', e=> m.when=e.target.value);
+      });
+    }
+
+    function suggestionText(p, short){
+      const weak=[]; if(state.atcf.ik<60) weak.push('IK'); if(state.atcf.rc<60) weak.push('RC'); if(state.atcf.di<60) weak.push('DI'); if(state.atcf.tc<60) weak.push('TC');
+      const gateMsg = (!p.gates.support||!p.gates.time||!p.gates.safety)? 'Satisfy gates (support/time/safety). ' : '';
+      const compMsg = weak.length? `Raise ${weak.join('/')}>=60%. ` : '';
+      const qMsg = state.q<0.60? `Improve procedures until Q≥0.60 (now ${state.q.toFixed(2)}). ` : '';
+      const milestone = (p.milestones[0] && p.milestones[0].desc) ? `Next milestone: ${p.milestones[0].desc}. ` : '';
+      const level = p.targetLevel==='constructor' ? 'Co‑own one SOP and run it once.' : p.targetLevel==='meta' ? 'Set an audit date and actually revise one SOP.' : p.targetLevel==='capability' ? 'Demonstrate the method twice w/out supervision.' : 'Elicit the skill once in a safe setting.';
+      const body = `${gateMsg}${compMsg}${qMsg}${milestone}${level}`.trim() || 'Looks good — proceed deliberately and review on schedule.';
+      if(short) return body; return `Suggestions for "${p.title||'Path'}": ${body}`;
+    }
+
+    function computeNextReview(weeks){ const d=new Date(); d.setDate(d.getDate()+weeks*7); return d.toISOString().slice(0,10); }
+    function cryptoId(){ return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():('id_'+Math.random().toString(36).slice(2,10)); }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+
+    // ---------- Review Log ----------
+    byId('chkLog').addEventListener('change', e=>{ byId('logSection').classList.toggle('hidden', !e.target.checked); if(e.target.checked) renderLog(); });
+    byId('btnTRC').addEventListener('click', ()=>{
+      const truth=byId('trc_truth').value.trim(); const recognition=byId('trc_rec').value.trim(); const remedy=byId('trc_rem').value.trim(); const reviewDate=byId('trc_rev').value.trim();
+      if(!truth||!recognition||!remedy||!reviewDate){ alert('Please fill every field.'); return; }
+      state.changeLog.push({id:cryptoId(), truth, recognition, remedy, reviewDate, createdAt:new Date().toISOString()});
+      byId('trc_truth').value=byId('trc_rec').value=byId('trc_rem').value=byId('trc_rev').value='';
+      renderLog();
+    });
+    byId('btnExportLog').addEventListener('click', ()=> download('review-log.json', JSON.stringify(state.changeLog,null,2)) );
+
+    function renderLog(){
+      const list=byId('log'); if(!list) return; if(!state.changeLog.length){ list.innerHTML='<div class="text-xs text-slate-500">No entries yet.</div>'; return; }
+      list.innerHTML = state.changeLog.map(it=>{
+        const overdue = isOverdue(it); const dueCls = overdue? 'bg-rose-50 text-rose-700 border border-rose-200':'bg-emerald-50 text-emerald-700 border border-emerald-200';
+        return `<div class='p-3 bg-white border rounded'><div class='text-xs ${dueCls} inline-block px-2 py-0.5 rounded'>Review ${overdue?'overdue':'pending'}: ${escapeHtml(it.reviewDate||'')}</div><div class='mt-1'><b>Truth:</b> ${escapeHtml(it.truth||'')}</div><div><b>Recognition:</b> ${escapeHtml(it.recognition||'')}</div><div><b>Remedy:</b> ${escapeHtml(it.remedy||'')}</div><div class='text-[10px] text-slate-500 mt-1'>Created ${escapeHtml(it.createdAt||'')}</div></div>`;
+      }).join('');
+    }
+    function isOverdue(item){ if(!item.reviewDate) return false; const d=new Date(item.reviewDate); if(isNaN(d)) return false; const today=new Date(); today.setHours(0,0,0,0); return d<today; }
+
+    // ---------- Export / Import ----------
+    byId('btnExport').addEventListener('click', ()=>{
+      download('faim-qirf-futurepull.json', JSON.stringify(state,null,2));
+    });
+    byId('fileImport').addEventListener('change', e=>{
+      const f=e.target.files&&e.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>{ try{ const obj=JSON.parse(reader.result); loadState(obj); alert('Imported'); }catch(err){ alert('Invalid JSON'); } }; reader.readAsText(f);
+    });
+
+    function loadState(obj){
+      Object.assign(state.profile, obj.profile||{});
+      Object.assign(state.plan, obj.plan||{});
+      Object.assign(state.atcf, obj.atcf||{});
+      Object.assign(state.weights, obj.weights||{});
+      state.q = +obj.q || state.q;
+      state.paths = Array.isArray(obj.paths)? obj.paths : [];
+      state.changeLog = Array.isArray(obj.changeLog)? obj.changeLog : [];
+      // reflect UI
+      byId('stage').value=state.profile.stage;
+      byId('n_safety').value=state.profile.needs.safety; byId('n_belong').value=state.profile.needs.belonging; byId('n_esteem').value=state.profile.needs.esteem; byId('n_growth').value=state.profile.needs.growth; byId('n_trans').value=state.profile.needs.transcend;
+      byId('a_A').value=state.profile.ABCD.A; byId('a_B').value=state.profile.ABCD.B; byId('a_C').value=state.profile.ABCD.C; byId('a_D').value=state.profile.ABCD.D;
+      byId('s_roles').value=state.profile.SPTS.roles.join(', '); byId('s_obl').value=state.profile.SPTS.obligations.join(', ');
+      byId('ik_tags').value=state.profile.IK.join(', ');
+      byId('b_beliefs').value=state.profile.BROA.beliefs.join(', ');
+      byId('b_rules').value=state.profile.BROA.rules.join(', ');
+      byId('b_ont').value=state.profile.BROA.ontology.join(', ');
+      byId('b_auth').value=state.profile.BROA.authenticity||'';
+      byId('ah1').value=state.profile.AH[0]||''; byId('ah2').value=state.profile.AH[1]||'';
+      byId('cap_to_upgrade').value=state.plan.capacityToUpgrade||''; byId('cap_goal').value=state.plan.capabilityGoal||''; byId('constructor').value=state.plan.constructor||'dualTrack'; byId('auditWeeks').value=state.plan.auditWeeks||6;
+      ['ik','rc','di','tc'].forEach(k=> byId(k).value=state.atcf[k]||70);
+      renderPlanSummary(); updateQ(); renderPaths(); if(!byId('logSection').classList.contains('hidden')) renderLog();
+    }
+
+    // ---------- Demos ----------
+    qsa('.demo').forEach(b=> b.addEventListener('click', ()=> loadDemo(b.dataset.k)));
+    function setDemoBadge(name){ const el=byId('demoBadge'); el.textContent = name? ('Loaded: '+name) : 'None loaded'; el.className='ml-2 text-xs px-2 py-1 rounded '+(name? 'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-slate-100 text-slate-700'); }
+    byId('btnReset').onclick = ()=>{ setDemoBadge(''); location.reload(); };
+
+    function loadDemo(key){
+      if(key==='teen'){
+        const obj={ profile:{ stage:'Adolescent', needs:{safety:2,belonging:3,esteem:2,growth:2,transcend:1}, ABCD:{A:2,B:3,C:2,D:2}, SPTS:{roles:['student','teammate'], obligations:['course','family']}, IK:['Respect-for-persons','Integrity-of-process','Honesty'], BROA:{beliefs:['fairness matters'], rules:['no harm'], ontology:['persons as ends'], authenticity:'driven by peer fairness'}, AH:['saw peer excluded','led to policy change'] }, plan:{ capacityToUpgrade:'perspective-taking', capabilityGoal:'build a dual-track warrant incl. lived evidence', constructor:'reviewerDiversity', auditWeeks:6 }, atcf:{ik:70,rc:65,di:60,tc:60}, weights:stageWeights['Adolescent'], q:0.63, paths:[ {id:cryptoId(), title:'Fair‑Process Advocate', why:'I care about peers being treated fairly.', targetLevel:'capability', gates:{support:true,time:false,safety:true}, milestones:[{desc:'Calibrate rubric with team', when:todayISO()}], barriers:['time'], supports:['teacher','teammate'], auditWeeks:6, createdAt:todayISO()} ], changeLog:[] };
+        loadState(obj); setDemoBadge('Adolescent — Fair Equivalence Advocate');
+      } else if(key==='ya'){
+        const obj={ profile:{ stage:'Young Adult', needs:{safety:2,belonging:2,esteem:3,growth:3,transcend:1}, ABCD:{A:3,B:2,C:2,D:2}, SPTS:{roles:['student','intern'], obligations:['course','work']}, IK:['Respect-for-evidence','Pluralism-by-design','Privacy'], BROA:{beliefs:['methods matter'], rules:['consent required'], ontology:['plural tracks'], authenticity:'let methods fit learners'}, AH:['saw interview track succeed','learned audit cycles'] }, plan:{ capacityToUpgrade:'time management', capabilityGoal:'run dual-track grading SOP end-to-end', constructor:'dualTrack', auditWeeks:6 }, atcf:{ik:72,rc:72,di:68,tc:70}, weights:stageWeights['Young Adult'], q:0.71, paths:[ {id:cryptoId(), title:'Dual‑Track Leader', why:'I want options to be fair for different learners.', targetLevel:'constructor', gates:{support:true,time:true,safety:true}, milestones:[{desc:'Draft SOP & train graders', when:todayISO()}], barriers:['buy-in'], supports:['mentor','rubric guide'], auditWeeks:6, createdAt:todayISO()} ], changeLog:[] };
+        loadState(obj); setDemoBadge('Young Adult — Dual‑Track Leader');
+      } else if(key==='adult'){
+        const obj={ profile:{ stage:'Adult', needs:{safety:2,belonging:2,esteem:3,growth:2,transcend:2}, ABCD:{A:3,B:2,C:3,D:2}, SPTS:{roles:['instructor','parent'], obligations:['students','family']}, IK:['Autonomy','Justice','Care'], BROA:{beliefs:['consent first'], rules:['privacy by default'], ontology:['institutional procedures'], authenticity:'protect student dignity'}, AH:['handled privacy incident','implemented consent SOP'] }, plan:{ capacityToUpgrade:'policy writing', capabilityGoal:'upgrade consent & privacy SOP', constructor:'consentSOP', auditWeeks:8 }, atcf:{ik:78,rc:70,di:72,tc:75}, weights:stageWeights['Adult'], q:0.74, paths:[ {id:cryptoId(), title:'Consent Policy Upgrader', why:'I want to ensure autonomy is respected.', targetLevel:'meta', gates:{support:true,time:true,safety:true}, milestones:[{desc:'Draft policy & review with students', when:todayISO()}], barriers:['time'], supports:['dept chair','student council'], auditWeeks:8, createdAt:todayISO()} ], changeLog:[] };
+        loadState(obj); setDemoBadge('Adult — Consent Policy Upgrader');
+      }
+    }
+
+    // ---------- init ----------
+    renderPlanSummary();
+    updateQ();
+    renderPaths();
+  </script>
 </body>
 </html>
